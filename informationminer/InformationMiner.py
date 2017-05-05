@@ -2,6 +2,7 @@ import os
 import json
 import nltk
 import numpy
+from progress.bar import Bar
 import pickle
 import logging
 import textract
@@ -12,7 +13,16 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class InformationMiner:
-    def __init__(self, text, save_output=True, language="en", outdir="output", outfile="output", force_create=False):
+    def __init__(self, text, save_output=False, language="en", outdir="output", outfile="output", force_create=False):
+        """
+        Creates an instance of InformationMiner.
+        :param text: The text to process. Either a single string, or a list of strings.
+        :param save_output: True if the output should be saved to oudir. Will create several files.
+        :param language: Either ger or en.
+        :param outdir: The directory to output files to
+        :param outfile: The name of the output file. Different steps will add prefixes
+        :param force_create: If set to True will overwrite any output.
+        """
         self.save_output = save_output
         self.language = language
         self.outdir = outdir
@@ -24,7 +34,7 @@ class InformationMiner:
         self.pos = None
         self.chunk = None
         self.ne = None
-        self.text = text
+        self.text = text if not isinstance(text, str) else [text]
         self.process()
 
     def process(self, text=None):
@@ -48,7 +58,7 @@ class InformationMiner:
                                      "Creating new tokens",
                                      self.text,
                                      '01_token_',
-                                     lambda d: nltk.word_tokenize(d, 'german'),
+                                     lambda d: [nltk.word_tokenize(i, 'german') for i in d],
                                      False)
 
     def ne_chunk(self):
@@ -56,7 +66,7 @@ class InformationMiner:
                                      "Creating new chunks. This can take some time ...",
                                      self.pos,
                                      '03_chunk_',
-                                     lambda d: nltk.ne_chunk(self.pos),
+                                     lambda d: [nltk.ne_chunk(i) for i in d],
                                      True)
 
     def tag_pos_ger(self):
@@ -64,7 +74,7 @@ class InformationMiner:
                                      "Creating new POS tags. This can take some time ...",
                                      self.tokens,
                                      '02_pos_',
-                                     lambda d: tag(d),
+                                     lambda d: [tag(i) for i in d],
                                      False)
 
     def tag_pos_en(self):
@@ -72,7 +82,7 @@ class InformationMiner:
                                      "Creating new POS tags. This can take some time ...",
                                      self.tokens,
                                      '02_pos_',
-                                     lambda d: nltk.pos_tag(d),
+                                     lambda d: [nltk.pos_tag(i) for i in d],
                                      False)
 
     def extract_entity_names(self):
@@ -80,7 +90,7 @@ class InformationMiner:
                                      "Searching for named entities",
                                      self.chunk,
                                      '04_ne_',
-                                     self.extract_recurse,
+                                     lambda d: [self.extract_recurse(i) for i in d],
                                      False)
 
     def extract_recurse(self, tree):
@@ -121,9 +131,11 @@ class InformationMiner:
         file = self.get_file(prefix, binary)
         if os.path.exists(file) and not self.force_create:
             if binary:
+                logging.info("Loading cached file")
                 with open(file, 'rb') as fin:
                     return pickle.load(fin)
             else:
+                logging.info("Loading cached file")
                 with open(file, 'r') as fin:
                     return json.load(fin)
 
