@@ -28,7 +28,7 @@ class InformationMiner:
         self.process()
 
     def process(self, text=None):
-        logging.info("Start processing text")
+        logging.debug("Start processing text")
         start = time.time()
         self.text = text if text else self.text
         self.tokens = self.tokenize()
@@ -41,7 +41,7 @@ class InformationMiner:
         self.chunk = self.ne_chunk()
         self.ne = self.extract_entity_names()
         stop = time.time()
-        logging.info("Processing finished in {:.2f} s".format(stop - start))
+        logging.debug("Processing finished in {:.2f} s".format(stop - start))
 
     def tokenize(self):
         return self.exec_cached_func("Tokenizing text",
@@ -109,7 +109,7 @@ class InformationMiner:
         if os.path.exists(file) and not self.force_create:
             logging.warning("Did not write {}. Already exists and overwrite is disabled.".format(file))
         else:
-            logging.info("Writing {}".format(file))
+            logging.debug("Writing {}".format(file))
             if binary:
                 with open(file, 'wb') as fout:
                     pickle.dump(data, fout, protocol=3)
@@ -128,10 +128,10 @@ class InformationMiner:
                     return json.load(fin)
 
     def exec_cached_func(self, log_msg, log_msg_create, data, prefix, func, binary):
-        logging.info(log_msg)
+        logging.debug(log_msg)
         cached = self.get_cached(prefix, binary)
         if not cached:
-            logging.info(log_msg_create)
+            logging.debug(log_msg_create)
             res = func(data)
             self.save(res, prefix, binary)
         return cached if cached else res
@@ -141,11 +141,11 @@ if __name__ == '__main__':
     def get_text():
         infile = 'input.txt'
         if os.path.exists(infile):
-            logging.info("Reading file from disk.")
+            logging.debug("Reading file from disk.")
             with open(infile, 'r') as fin:
                 text = fin.readlines()
         else:
-            logging.info("Creating new file from PDF.")
+            logging.debug("Creating new file from PDF.")
             text = textract.process(
                 '/home/ric/Nextcloud/rpg/shadowrun/rulebooks/Shadowrun_5_Grundregelwerk.pdf').decode('utf-8')
             with open(infile, 'w') as fout:
