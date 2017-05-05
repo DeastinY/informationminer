@@ -3,10 +3,11 @@ import nltk
 import random
 import logging
 import pickle
-from ClassifierBasedGermanTagger import ClassifierBasedGermanTagger
+from .ClassifierBasedGermanTagger import ClassifierBasedGermanTagger
 
 logging.basicConfig(level=logging.DEBUG)
 
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 TIGER_FILE_NAME = 'tiger_release_aug07.corrected.16012013.conll09'
 TAGGER_FILE_NAME = 'nltk_german_classifier_data.pickle'
 tagger = None
@@ -16,7 +17,7 @@ def generate_pos_tagger(check_accuracy=False):
     """Accuracy is about 0.94 with 90% training data."""
     global tagger
     logging.info("Reading TIGER corpus")
-    corp = nltk.corpus.ConllCorpusReader('.', TIGER_FILE_NAME,
+    corp = nltk.corpus.ConllCorpusReader(DIR_PATH, TIGER_FILE_NAME,
                                          ['ignore', 'words', 'ignore', 'ignore', 'pos'],
                                          encoding='utf-8')
     tagged_sents = list(corp.tagged_sents())
@@ -36,19 +37,19 @@ def generate_pos_tagger(check_accuracy=False):
         accuracy = tagger.evaluate(test_sents)
         logging.info("Accurracy is {}.".format(accuracy))
     logging.info("Serializing the Tagger")
-    with open('nltk_german_classifier_data.pickle', 'wb') as f:
+    with open(os.path.join(DIR_PATH, TAGGER_FILE_NAME), 'wb') as f:
         pickle.dump(tagger, f, protocol=3)
 
 
 def load_tagger():
     global tagger
-    if os.path.exists(TAGGER_FILE_NAME):
+    if os.path.exists(os.path.join(DIR_PATH, TAGGER_FILE_NAME)):
         logging.debug("Reading Tagger from file")
-        with open(TAGGER_FILE_NAME, 'rb') as f:
+        with open(os.path.join(DIR_PATH, TAGGER_FILE_NAME), 'rb') as f:
             tagger = pickle.load(f)
     else:
         logging.warning("No Tagger found. Generating Tagger, this may take some time.")
-        tagger = generate_pos_tagger()
+        generate_pos_tagger()
 
 
 def tag(tokens):

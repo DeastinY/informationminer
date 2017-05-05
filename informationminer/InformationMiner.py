@@ -5,16 +5,19 @@ import numpy
 import pickle
 import logging
 import textract
-import POSTagger
 import time
+from .POSTagger import tag
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 class InformationMiner:
-    def __init__(self, text, language="ger", outdir="output", outfile="output", force_create=False):
+    def __init__(self, text, save_output=True, language="en", outdir="output", outfile="output", force_create=False):
+        self.save_output = save_output
         self.language = language
         self.outdir = outdir
+        if not os.path.exists(outdir):
+                os.makedirs(outdir)
         self.outfile = outfile
         self.force_create = force_create
         self.tokens = None
@@ -61,7 +64,7 @@ class InformationMiner:
                                      "Creating new POS tags. This can take some time ...",
                                      self.tokens,
                                      '02_pos_',
-                                     lambda d: POSTagger.tag(d),
+                                     lambda d: tag(d),
                                      False)
 
     def tag_pos_en(self):
@@ -100,6 +103,8 @@ class InformationMiner:
         return outfile
 
     def save(self, data, prefix='', binary=False):
+        if not self.save_output:
+            return
         file = self.get_file(prefix, binary)
         if os.path.exists(file) and not self.force_create:
             logging.warning("Did not write {}. Already exists and overwrite is disabled.".format(file))
