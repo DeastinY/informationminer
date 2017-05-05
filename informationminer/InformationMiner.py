@@ -147,7 +147,7 @@ class InformationMiner:
         cached = self.get_cached(prefix, binary)
         if not cached:
             logging.debug(log_msg_create)
-            bar = Bar(max = len(data))
+            bar = Bar(log_msg_create, max = len(data))
             res = []
             for d in data:
                 bar.next()
