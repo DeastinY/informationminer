@@ -17,6 +17,7 @@ This package is on pip ! Just use `pip3 install informationminer`.
 
 ## Getting started
 Look at the following example. More complex tasks like creating your own Tagger will be added later.
+
 ```python
 >>> import informationminer
 >>> im = informationminer.InformationMiner("I love my new fancy InformationMiner !")
@@ -44,6 +45,7 @@ INFO:root:Processing finished in 0.01 s
 ```
 
 The InformationMiner class has a couple of optional parameters:
-    - **save_output**: Write output to outdir/outfile. Enabled by default so you don't do work twice.
-    - **force_create**: Will allways overwrite files if *save_output* is enabled
-    - **language**: German by default. Either *ger* or *en*
+
+  - **save_output**: Write output to outdir/outfile. Enable this, so you don't do work twice.
+  - **force_create**: Will allways overwrite files if *save_output* is enabled
+  - **language**: English by default. Currently either *ger* or *en*
