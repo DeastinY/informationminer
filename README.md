@@ -21,6 +21,7 @@ Look at the following example. More complex tasks like creating your own Tagger 
 ```python
 >>> import informationminer
 >>> im = informationminer.InformationMiner("This is a samelp sentence. I love InformationMiner !")
+>>> im.process()
 INFO:root:Start processing text
 INFO:root:Tokenizing text
 INFO:root:Creating new tokens
