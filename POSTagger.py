@@ -14,6 +14,7 @@ tagger = None
 
 def generate_pos_tagger(check_accuracy=False):
     """Accuracy is about 0.94 with 90% training data."""
+    global tagger
     logging.info("Reading TIGER corpus")
     corp = nltk.corpus.ConllCorpusReader('.', TIGER_FILE_NAME,
                                          ['ignore', 'words', 'ignore', 'ignore', 'pos'],
@@ -37,7 +38,6 @@ def generate_pos_tagger(check_accuracy=False):
     logging.info("Serializing the Tagger")
     with open('nltk_german_classifier_data.pickle', 'wb') as f:
         pickle.dump(tagger, f, protocol=3)
-    return tagger
 
 
 def load_tagger():

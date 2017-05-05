@@ -25,6 +25,7 @@ Tag German text.
 import re
 from nltk.tag.sequential import ClassifierBasedTagger
 
+
 class ClassifierBasedGermanTagger(ClassifierBasedTagger):
     """A classifier based German part-of-speech tagger. It has an accuracy of
     96.09% after being trained on 90% of the German TIGER corpus. The tagger
@@ -40,12 +41,12 @@ class ClassifierBasedGermanTagger(ClassifierBasedTagger):
         """
 
         word = tokens[index]
-        if index == 0: # At the beginning of the sentence
+        if index == 0:  # At the beginning of the sentence
             prevword = prevprevword = None
             prevtag = prevprevtag = None
-            #word = word.lower() # Lowercase at the beginning of sentence
+            # word = word.lower()  # Lowercase at the beginning of sentence
         elif index == 1:
-            prevword = tokens[index-1] # Note: no lowercase
+            prevword = tokens[index-1]  # Note: no lowercase
             prevprevword = None
             prevtag = history[index-1]
             prevprevtag = None

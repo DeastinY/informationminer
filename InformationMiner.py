@@ -11,14 +11,16 @@ import time
 logging.basicConfig(level=logging.DEBUG)
 
 
-class InformationMiner():
-    def __init__(self, text, outdir="output", outfile="output", force_create=False):
+class InformationMiner:
+    def __init__(self, text, language="ger", outdir="output", outfile="output", force_create=False):
+        self.language = language
         self.outdir = outdir
         self.outfile = outfile
         self.force_create = force_create
         self.tokens = None
         self.pos = None
         self.chunk = None
+        self.ne = None
         self.text = text
         self.process()
 
@@ -27,11 +29,16 @@ class InformationMiner():
         start = time.time()
         self.text = text if text else self.text
         self.tokens = self.tokenize()
-        self.pos = self.tag_pos()
+        if self.language == "ger":
+            self.pos = self.tag_pos_ger()
+        elif self.language == "en":
+            self.pos = self.tag_pos_en()
+        else:
+            raise Exception("Language should be either en or ger")
         self.chunk = self.ne_chunk()
         self.ne = self.extract_entity_names()
         stop = time.time()
-        logging.info("Processing finished in {:.2f} s".format(stop-start))
+        logging.info("Processing finished in {:.2f} s".format(stop - start))
 
     def tokenize(self):
         return self.exec_cached_func("Tokenizing text",
@@ -43,19 +50,27 @@ class InformationMiner():
 
     def ne_chunk(self):
         return self.exec_cached_func("Chunking POS",
-                                "Creating new chunks. This can take some time ...",
-                                self.pos,
-                                '03_chunk_',
-                                lambda d: nltk.ne_chunk(self.pos),
-                                True)
+                                     "Creating new chunks. This can take some time ...",
+                                     self.pos,
+                                     '03_chunk_',
+                                     lambda d: nltk.ne_chunk(self.pos),
+                                     True)
 
-    def tag_pos(self):
+    def tag_pos_ger(self):
         return self.exec_cached_func("POS tagging tokens",
-                         "Creating new POS tags. This can take some time ...",
-                         self.tokens,
-                         '02_pos_',
-                         lambda d: POSTagger.tag(d),
-                         False)
+                                     "Creating new POS tags. This can take some time ...",
+                                     self.tokens,
+                                     '02_pos_',
+                                     lambda d: POSTagger.tag(d),
+                                     False)
+
+    def tag_pos_en(self):
+        return self.exec_cached_func("POS tagging tokens",
+                                     "Creating new POS tags. This can take some time ...",
+                                     self.tokens,
+                                     '02_pos_',
+                                     lambda d: nltk.pos_tag(d),
+                                     False)
 
     def extract_entity_names(self):
         return self.exec_cached_func("Extracting entity names",
@@ -80,7 +95,7 @@ class InformationMiner():
     #######################################Util Functions Down Here #######################################
 
     def get_file(self, prefix, binary=False):
-        outfile = os.path.join(self.outdir, prefix+self.outfile)
+        outfile = os.path.join(self.outdir, prefix + self.outfile)
         outfile += '.pickle' if binary else '.json'
         return outfile
 
@@ -126,11 +141,12 @@ if __name__ == '__main__':
                 text = fin.readlines()
         else:
             logging.info("Creating new file from PDF.")
-            text = textract.process('/home/ric/Nextcloud/rpg/shadowrun/rulebooks/Shadowrun_5_Grundregelwerk.pdf').decode('utf-8')
+            text = textract.process(
+                '/home/ric/Nextcloud/rpg/shadowrun/rulebooks/Shadowrun_5_Grundregelwerk.pdf').decode('utf-8')
             with open(infile, 'w') as fout:
                 fout.writelines(text)
         return text
 
 
     InformationMiner("\n".join(get_text()))
-    #InformationMiner("Peter ist ein großer Junge. Er kauft bei dem großen Supermarkt Tedi schon ganz alleine eine Frisbee.", outfile='short_test', force_create=True)
+    # InformationMiner("Peter ist ein großer Junge. Er kauft bei dem großen Supermarkt Tedi schon ganz alleine eine Frisbee.", outfile='short_test', force_create=True)
