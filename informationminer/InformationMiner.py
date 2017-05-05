@@ -35,7 +35,6 @@ class InformationMiner:
         self.chunk = None
         self.ne = None
         self.text = text if not isinstance(text, str) else [text]
-        self.process()
 
     def process(self, text=None):
         logging.info("Start processing text")
@@ -173,5 +172,5 @@ if __name__ == '__main__':
         return text
 
 
-    InformationMiner("\n".join(get_text()))
+    InformationMiner("\n".join(get_text()), force_create=True)
     # InformationMiner("Peter ist ein großer Junge. Er kauft bei dem großen Supermarkt Tedi schon ganz alleine eine Frisbee.", outfile='short_test', force_create=True)
