@@ -38,7 +38,7 @@ class InformationMiner:
         self.process()
 
     def process(self, text=None):
-        logging.debug("Start processing text")
+        logging.info("Start processing text")
         start = time.time()
         self.text = text if text else self.text
         self.tokens = self.tokenize()
@@ -47,18 +47,21 @@ class InformationMiner:
         elif self.language == "en":
             self.pos = self.tag_pos_en()
         else:
-            raise Exception("Language should be either en or ger")
+            msg = "Language should be either en or ger"
+            logging.error(msg)
+            raise Exception(msg)
         self.chunk = self.ne_chunk()
         self.ne = self.extract_entity_names()
         stop = time.time()
-        logging.debug("Processing finished in {:.2f} s".format(stop - start))
+        logging.info("Processing finished in {:.2f} s".format(stop - start))
 
     def tokenize(self):
+        language = 'german' if self.language == 'ger' else 'english'
         return self.exec_cached_func("Tokenizing text",
                                      "Creating new tokens",
                                      self.text,
                                      '01_token_',
-                                     lambda d: [nltk.word_tokenize(i, 'german') for i in d],
+                                     lambda d: nltk.word_tokenize(d, language),
                                      False)
 
     def ne_chunk(self):
@@ -66,7 +69,7 @@ class InformationMiner:
                                      "Creating new chunks. This can take some time ...",
                                      self.pos,
                                      '03_chunk_',
-                                     lambda d: [nltk.ne_chunk(i) for i in d],
+                                     lambda d: nltk.ne_chunk(d),
                                      True)
 
     def tag_pos_ger(self):
@@ -74,7 +77,7 @@ class InformationMiner:
                                      "Creating new POS tags. This can take some time ...",
                                      self.tokens,
                                      '02_pos_',
-                                     lambda d: [tag(i) for i in d],
+                                     lambda d: tag(d),
                                      False)
 
     def tag_pos_en(self):
@@ -82,7 +85,7 @@ class InformationMiner:
                                      "Creating new POS tags. This can take some time ...",
                                      self.tokens,
                                      '02_pos_',
-                                     lambda d: [nltk.pos_tag(i) for i in d],
+                                     lambda d: nltk.pos_tag(d),
                                      False)
 
     def extract_entity_names(self):
@@ -90,7 +93,7 @@ class InformationMiner:
                                      "Searching for named entities",
                                      self.chunk,
                                      '04_ne_',
-                                     lambda d: [self.extract_recurse(i) for i in d],
+                                     lambda d: self.extract_recurse(d),
                                      False)
 
     def extract_recurse(self, tree):
@@ -144,7 +147,12 @@ class InformationMiner:
         cached = self.get_cached(prefix, binary)
         if not cached:
             logging.debug(log_msg_create)
-            res = func(data)
+            bar = Bar(max = len(data))
+            res = []
+            for d in data:
+                bar.next()
+                res.append(func(d))
+            bar.finish()
             self.save(res, prefix, binary)
         return cached if cached else res
 
