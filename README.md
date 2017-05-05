@@ -6,7 +6,7 @@ Currently supports German and English language.
 The following techniques are used on the passed text:
   - Tokenization
   - POS Tagging
-    - English tagger is based on NLTK
+    - English tagger is based on NLTK **default**
     - German tagger is generated from TIGER corpus
   - Chunking
   - Named Entity recognition
