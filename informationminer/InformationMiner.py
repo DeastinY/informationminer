@@ -8,17 +8,19 @@ import logging
 import textract
 import time
 from .POSTagger import tag
+from sklearn import decomposition
+import sklearn.feature_extraction.text as sklearn_text
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 class InformationMiner:
-    def __init__(self, text, save_output=False, language="en", outdir="output", outfile="output", force_create=False):
+    def __init__(self, text, save_output=False, language="english", outdir="output", outfile="output", force_create=False):
         """
         Creates an instance of InformationMiner.
         :param text: The text to process. Either a single string, or a list of strings.
         :param save_output: True if the output should be saved to oudir. Will create several files.
-        :param language: Either ger or en.
+        :param language: Either german or english.
         :param outdir: The directory to output files to
         :param outfile: The name of the output file. Different steps will add prefixes
         :param force_create: If set to True will overwrite any output.
@@ -34,6 +36,7 @@ class InformationMiner:
         self.pos = None
         self.chunk = None
         self.ne = None
+        self.topics = None
         self.text = text if not isinstance(text, str) else [text]
 
     def process(self, text=None):
@@ -41,26 +44,26 @@ class InformationMiner:
         start = time.time()
         self.text = text if text else self.text
         self.tokens = self.tokenize()
-        if self.language == "ger":
+        if self.language == "german":
             self.pos = self.tag_pos_ger()
-        elif self.language == "en":
+        elif self.language == "english":
             self.pos = self.tag_pos_en()
         else:
-            msg = "Language should be either en or ger"
+            msg = "Language should be either english or german"
             logging.error(msg)
             raise Exception(msg)
         self.chunk = self.ne_chunk()
         self.ne = self.extract_entity_names()
+        self.topics = self.nmf()
         stop = time.time()
         logging.info("Processing finished in {:.2f} s".format(stop - start))
 
     def tokenize(self):
-        language = 'german' if self.language == 'ger' else 'english'
         return self.exec_cached_func("Tokenizing text",
                                      "Creating new tokens",
                                      self.text,
                                      '01_token_',
-                                     lambda d: nltk.word_tokenize(d, language),
+                                     lambda d: nltk.word_tokenize(d, self.language),
                                      False)
 
     def ne_chunk(self):
@@ -94,6 +97,29 @@ class InformationMiner:
                                      '04_ne_',
                                      lambda d: self.extract_recurse(d),
                                      False)
+
+    def nmf(self):
+        return self.exec_cached_func("Extracting topics",
+                                     "Generating topics",
+                                     [t['raw_text'] for t in self.text],
+                                     '05_nmf',
+                                     lambda d: self.nonnegative_matrix_factorization(d),
+                                     False)
+
+    def nonnegative_matrix_factorization(self, text):
+        vectorizer = sklearn_text.CountVectorizer(input='text', stop_words=self.language, min_df=20)
+        dtm = vectorizer.fit_transform(text)
+        vocab = vectorizer.get_feature_names()
+        num_topics, num_top_words = 20, 20
+        clf = decomposition.NMF(n_components=num_topics, random_state=1)
+        clf.fit_transform(dtm)
+        topic_words = []
+        for topic in clf.components_:
+            word_idx = numpy.argsort(topic)[::-1][0:num_top_words]
+            topic_words.append([vocab[i] for i in word_idx])
+        return topic_words
+
+    def
 
     def extract_recurse(self, tree):
         entity_names = []

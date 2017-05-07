@@ -5,4 +5,4 @@ The ClassifierBasedGermanTagger can be used for POS-Tagging on the German langua
 from .InformationMiner import InformationMiner
 from .ClassifierBasedGermanTagger import ClassifierBasedGermanTagger
 from .POSTagger import tag
-__version__ = '1.6.2'
+__version__ = '1.6.3'

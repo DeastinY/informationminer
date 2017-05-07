@@ -3,3 +3,4 @@ numpy
 pickle
 textract
 progress
+sklearn
