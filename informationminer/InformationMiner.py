@@ -119,8 +119,6 @@ class InformationMiner:
             topic_words.append([vocab[i] for i in word_idx])
         return topic_words
 
-    def
-
     def extract_recurse(self, tree):
         entity_names = []
         if hasattr(tree, 'label') and tree.label():
