@@ -3,6 +3,7 @@ import json
 import nltk
 import numpy
 from progress.bar import Bar
+from pathlib import Path
 import pickle
 import logging
 import textract
@@ -27,9 +28,9 @@ class InformationMiner:
         """
         self.save_output = save_output
         self.language = language
-        self.outdir = outdir
-        if not os.path.exists(outdir):
-                os.makedirs(outdir)
+        self.outdir = Path(outdir)
+        if not self.outdir.exists:
+            os.makedirs(outdir)
         self.outfile = outfile
         self.force_create = force_create
         self.tokens = None
@@ -134,35 +135,33 @@ class InformationMiner:
     #######################################Util Functions Down Here #######################################
 
     def get_file(self, prefix, binary=False):
-        outfile = os.path.join(self.outdir, prefix + self.outfile)
-        outfile += '.pickle' if binary else '.json'
-        return outfile
+        return Path(self.outdir / (prefix + self.outfile + '.pickle' if binary else '.json'))
 
     def save(self, data, prefix='', binary=False):
         if not self.save_output:
             return
         file = self.get_file(prefix, binary)
-        if os.path.exists(file) and not self.force_create:
+        if file.exists() and not self.force_create:
             logging.warning("Did not write {}. Already exists and overwrite is disabled.".format(file))
         else:
             logging.debug("Writing {}".format(file))
             if binary:
-                with open(file, 'wb') as fout:
+                with file.open('wb') as fout:
                     pickle.dump(data, fout, protocol=3)
             else:
-                with open(file, 'w') as fout:
+                with file.open('w') as fout:
                     json.dump(data, fout)
 
     def get_cached(self, prefix, binary):
         file = self.get_file(prefix, binary)
-        if os.path.exists(file) and not self.force_create:
+        if file.exists() and not self.force_create:
             if binary:
                 logging.info("Loading cached file")
-                with open(file, 'rb') as fin:
+                with file.open('rb') as fin:
                     return pickle.load(fin)
             else:
                 logging.info("Loading cached file")
-                with open(file, 'r') as fin:
+                with file.open('r') as fin:
                     return json.load(fin)
 
     def exec_cached_func(self, log_msg, log_msg_create, data, prefix, func, binary):
@@ -182,16 +181,16 @@ class InformationMiner:
 
 if __name__ == '__main__':
     def get_text():
-        infile = 'input.txt'
-        if os.path.exists(infile):
+        infile = Path('input.txt')
+        if infile.exists():
             logging.debug("Reading file from disk.")
-            with open(infile, 'r') as fin:
+            with infile.open('r') as fin:
                 text = fin.readlines()
         else:
             logging.debug("Creating new file from PDF.")
             text = textract.process(
                 '/home/ric/Nextcloud/rpg/shadowrun/rulebooks/Shadowrun_5_Grundregelwerk.pdf').decode('utf-8')
-            with open(infile, 'w') as fout:
+            with infile.open('w') as fout:
                 fout.writelines(text)
         return text
 
