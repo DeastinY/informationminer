@@ -29,8 +29,7 @@ class InformationMiner:
         self.save_output = save_output
         self.language = language
         self.outdir = Path(outdir)
-        if not self.outdir.exists:
-            os.makedirs(outdir)
+        self.outdir.mkdir(exist_ok=True)
         self.outfile = outfile
         self.force_create = force_create
         self.tokens = None
@@ -135,7 +134,9 @@ class InformationMiner:
     #######################################Util Functions Down Here #######################################
 
     def get_file(self, prefix, binary=False):
-        return Path(self.outdir / (prefix + self.outfile + '.pickle' if binary else '.json'))
+        filename = prefix + self.outfile
+        filename += '.pickle' if binary else '.json'
+        return self.outdir / filename
 
     def save(self, data, prefix='', binary=False):
         if not self.save_output:
