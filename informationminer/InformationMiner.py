@@ -102,7 +102,7 @@ class InformationMiner:
     def nmf(self):
         return self.exec_cached_func("Extracting topics",
                                      "Generating topics",
-                                     [t['raw_text'] for t in self.text],
+                                     self.text,
                                      '05_nmf',
                                      lambda d: self.nonnegative_matrix_factorization(d),
                                      False)
